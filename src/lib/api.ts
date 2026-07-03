@@ -1,7 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 
 const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+  process.env.NEXT_PUBLIC_API_URL || 'https://azm-b.onrender.com/api'
 ).replace(/\/$/, '');
 
 const http = axios.create({
