@@ -1,11 +1,21 @@
-const API_URL = "https://azm-b.onrender.com/api";
+import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
+
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+).replace(/\/$/, '');
+
+const http = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 45000,
+});
 
 class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
-    this.name = "ApiError";
+    this.name = 'ApiError';
   }
 }
 
@@ -16,126 +26,112 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler) {
   onUnauthorized = handler;
 }
 
+function networkErrorMessage(): string {
+  if (API_URL.includes('localhost') || API_URL.includes('127.0.0.1')) {
+    return 'Cannot reach the server. Make sure the backend is running on port 5001.';
+  }
+  return 'Cannot reach the server. The API may be starting up — wait a moment and try again.';
+}
+
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {},
+  config: AxiosRequestConfig = {},
   token?: string | null
 ): Promise<T> {
-  let response: Response;
-
   try {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    };
-    if (token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+    const response = await http.request<T>({
+      url: endpoint,
+      ...config,
+      headers: {
+        ...(config.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (!axios.isAxiosError(error)) {
+      throw new ApiError('Unexpected error', 0);
     }
 
-    response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-  } catch {
-    throw new ApiError(
-      "Cannot reach the server. Make sure the backend is running on port 5001.",
-      0
-    );
-  }
+    const axiosError = error as AxiosError<{ message?: string }>;
 
-  let data: Record<string, unknown> = {};
-  const contentType = response.headers.get("content-type");
-  if (contentType?.includes("application/json")) {
-    data = await response.json().catch(() => ({}));
-  }
+    if (!axiosError.response) {
+      throw new ApiError(networkErrorMessage(), 0);
+    }
 
-  if (!response.ok) {
-    if (response.status === 401 && token) {
+    const { status, data } = axiosError.response;
+
+    if (status === 401 && token) {
       onUnauthorized?.();
     }
 
     const message =
-      (typeof data.message === "string" && data.message) ||
-      (response.status === 401
-        ? "Session expired. Please sign in again."
-        : response.status === 503
-        ? "Server database is not connected. Start MongoDB and restart the backend."
-        : `Request failed (${response.status})`);
+      (typeof data?.message === 'string' && data.message) ||
+      (status === 401
+        ? 'Session expired. Please sign in again.'
+        : status === 503
+          ? 'Server database is not connected. Start MongoDB and restart the backend.'
+          : `Request failed (${status})`);
 
-    throw new ApiError(message, response.status);
+    throw new ApiError(message, status);
   }
-
-  return data as T;
 }
 
 export const api = {
   health: () =>
-    request<{ status: string; message: string; database?: string }>("/health"),
+    request<{ status: string; message: string; database?: string }>('/health'),
 
   register: (name: string, email: string, password: string) =>
-    request<import("@/types").AuthResponse>("/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ name, email, password }),
+    request<import('@/types').AuthResponse>('/auth/register', {
+      method: 'POST',
+      data: { name, email, password },
     }),
 
   login: (email: string, password: string) =>
-    request<import("@/types").AuthResponse>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
+    request<import('@/types').AuthResponse>('/auth/login', {
+      method: 'POST',
+      data: { email, password },
     }),
 
   getCategories: (token: string) =>
-    request<import("@/types").Category[]>("/categories", {}, token),
+    request<import('@/types').Category[]>('/categories', {}, token),
 
   createCategory: (
     token: string,
     data: { name: string; color?: string; icon?: string }
   ) =>
-    request<import("@/types").Category>(
-      "/categories",
-      { method: "POST", body: JSON.stringify(data) },
-      token
-    ),
+    request<import('@/types').Category>('/categories', { method: 'POST', data }, token),
 
   updateCategory: (
     token: string,
     id: string,
     data: Partial<{ name: string; color: string; icon: string }>
   ) =>
-    request<import("@/types").Category>(
+    request<import('@/types').Category>(
       `/categories/${id}`,
-      { method: "PUT", body: JSON.stringify(data) },
+      { method: 'PUT', data },
       token
     ),
 
   deleteCategory: (token: string, id: string) =>
-    request<{ message: string }>(
-      `/categories/${id}`,
-      { method: "DELETE" },
-      token
-    ),
+    request<{ message: string }>(`/categories/${id}`, { method: 'DELETE' }, token),
 
   getHabits: (token: string, date?: string, categoryId?: string) => {
     const params = new URLSearchParams();
-    if (date) params.set("date", date);
-    if (categoryId) params.set("categoryId", categoryId);
-    const q = params.toString() ? `?${params.toString()}` : "";
-    return request<import("@/types").Habit[]>(`/habits${q}`, {}, token);
+    if (date) params.set('date', date);
+    if (categoryId) params.set('categoryId', categoryId);
+    const q = params.toString() ? `?${params.toString()}` : '';
+    return request<import('@/types').Habit[]>(`/habits${q}`, {}, token);
   },
 
   createHabit: (token: string, data: Record<string, unknown>) =>
-    request<import("@/types").Habit>(
-      "/habits",
-      { method: "POST", body: JSON.stringify(data) },
-      token
-    ),
+    request<import('@/types').Habit>('/habits', { method: 'POST', data }, token),
 
   updateHabit: (token: string, id: string, data: Record<string, unknown>) =>
-    request<import("@/types").Habit>(
-      `/habits/${id}`,
-      { method: "PUT", body: JSON.stringify(data) },
-      token
-    ),
+    request<import('@/types').Habit>(`/habits/${id}`, { method: 'PUT', data }, token),
 
   deleteHabit: (token: string, id: string) =>
-    request<{ message: string }>(`/habits/${id}`, { method: "DELETE" }, token),
+    request<{ message: string }>(`/habits/${id}`, { method: 'DELETE' }, token),
 
   toggleHabit: (
     token: string,
@@ -143,16 +139,16 @@ export const api = {
     date: string,
     durationSeconds?: number
   ) =>
-    request<import("@/types").HabitLogToggle>(
+    request<import('@/types').HabitLogToggle>(
       `/habits/${id}/toggle`,
-      { method: "POST", body: JSON.stringify({ date, durationSeconds }) },
+      { method: 'POST', data: { date, durationSeconds } },
       token
     ),
 
   startTimer: (token: string, id: string, date: string) =>
-    request<import("@/types").HabitLogToggle>(
+    request<import('@/types').HabitLogToggle>(
       `/habits/${id}/timer/start`,
-      { method: "POST", body: JSON.stringify({ date }) },
+      { method: 'POST', data: { date } },
       token
     ),
 
@@ -162,14 +158,14 @@ export const api = {
     date: string,
     durationSeconds?: number
   ) =>
-    request<import("@/types").HabitLogToggle>(
+    request<import('@/types').HabitLogToggle>(
       `/habits/${id}/timer/stop`,
-      { method: "POST", body: JSON.stringify({ date, durationSeconds }) },
+      { method: 'POST', data: { date, durationSeconds } },
       token
     ),
 
   getCalendarData: (token: string, start: string, end: string) =>
-    request<import("@/types").CalendarData>(
+    request<import('@/types').CalendarData>(
       `/habits/logs/range?start=${start}&end=${end}`,
       {},
       token
@@ -180,15 +176,11 @@ export const api = {
     params?: { month?: string; start?: string; end?: string }
   ) => {
     const search = new URLSearchParams();
-    if (params?.month) search.set("month", params.month);
-    if (params?.start) search.set("start", params.start);
-    if (params?.end) search.set("end", params.end);
-    const query = search.toString() ? `?${search.toString()}` : "";
-    return request<import("@/types").SummaryData>(
-      `/summary${query}`,
-      {},
-      token
-    );
+    if (params?.month) search.set('month', params.month);
+    if (params?.start) search.set('start', params.start);
+    if (params?.end) search.set('end', params.end);
+    const query = search.toString() ? `?${search.toString()}` : '';
+    return request<import('@/types').SummaryData>(`/summary${query}`, {}, token);
   },
 
   getDiaryEntries: (
@@ -196,72 +188,56 @@ export const api = {
     params?: { date?: string; month?: string }
   ) => {
     const search = new URLSearchParams();
-    if (params?.date) search.set("date", params.date);
-    if (params?.month) search.set("month", params.month);
-    const q = search.toString() ? `?${search.toString()}` : "";
-    return request<import("@/types").DiaryEntry[]>(`/diary${q}`, {}, token);
+    if (params?.date) search.set('date', params.date);
+    if (params?.month) search.set('month', params.month);
+    const q = search.toString() ? `?${search.toString()}` : '';
+    return request<import('@/types').DiaryEntry[]>(`/diary${q}`, {}, token);
   },
 
   createDiaryEntry: (
     token: string,
     data: { date: string; title?: string; content: string; mood?: string }
   ) =>
-    request<import("@/types").DiaryEntry>(
-      "/diary",
-      { method: "POST", body: JSON.stringify(data) },
-      token
-    ),
+    request<import('@/types').DiaryEntry>('/diary', { method: 'POST', data }, token),
 
   updateDiaryEntry: (
     token: string,
     id: string,
     data: Record<string, unknown>
   ) =>
-    request<import("@/types").DiaryEntry>(
+    request<import('@/types').DiaryEntry>(
       `/diary/${id}`,
-      { method: "PUT", body: JSON.stringify(data) },
+      { method: 'PUT', data },
       token
     ),
 
   deleteDiaryEntry: (token: string, id: string) =>
-    request<{ message: string }>(`/diary/${id}`, { method: "DELETE" }, token),
+    request<{ message: string }>(`/diary/${id}`, { method: 'DELETE' }, token),
 
   getExpenses: (
     token: string,
     params?: { month?: string; start?: string; end?: string }
   ) => {
     const search = new URLSearchParams();
-    if (params?.month) search.set("month", params.month);
-    if (params?.start) search.set("start", params.start);
-    if (params?.end) search.set("end", params.end);
-    const q = search.toString() ? `?${search.toString()}` : "";
-    return request<import("@/types").ExpenseSummary>(
-      `/expenses${q}`,
-      {},
-      token
-    );
+    if (params?.month) search.set('month', params.month);
+    if (params?.start) search.set('start', params.start);
+    if (params?.end) search.set('end', params.end);
+    const q = search.toString() ? `?${search.toString()}` : '';
+    return request<import('@/types').ExpenseSummary>(`/expenses${q}`, {}, token);
   },
 
   createExpense: (token: string, data: Record<string, unknown>) =>
-    request<import("@/types").Expense>(
-      "/expenses",
-      { method: "POST", body: JSON.stringify(data) },
-      token
-    ),
+    request<import('@/types').Expense>('/expenses', { method: 'POST', data }, token),
 
   updateExpense: (token: string, id: string, data: Record<string, unknown>) =>
-    request<import("@/types").Expense>(
+    request<import('@/types').Expense>(
       `/expenses/${id}`,
-      { method: "PUT", body: JSON.stringify(data) },
+      { method: 'PUT', data },
       token
     ),
 
   deleteExpense: (token: string, id: string) =>
-    request<{ message: string }>(
-      `/expenses/${id}`,
-      { method: "DELETE" },
-      token
-    ),
+    request<{ message: string }>(`/expenses/${id}`, { method: 'DELETE' }, token),
 };
 
-export { ApiError };
+export { ApiError, API_URL };

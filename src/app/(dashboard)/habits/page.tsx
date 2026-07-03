@@ -79,7 +79,7 @@ export default function HabitsPage() {
       {error && <ErrorBanner message={error} onRetry={fetchData} />}
 
       <div>
-        <h1 className="text-3xl font-bold gold-text">Manage Habits</h1>
+        <h1 className="text-2xl font-bold gold-text sm:text-3xl">Manage Habits</h1>
         <p className="mt-1 text-[var(--muted)]">Add tasks with timers, categories & reminders</p>
       </div>
 

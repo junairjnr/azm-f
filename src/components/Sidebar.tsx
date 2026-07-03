@@ -64,7 +64,7 @@ export default function Sidebar() {
   }, [pathname]);
 
   const navLinks = (
-    <nav className="flex-1 space-y-0.5 overflow-y-auto">
+    <nav className="flex-1 space-y-0.5 overflow-y-auto overscroll-contain">
       {navItems.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (
@@ -76,7 +76,7 @@ export default function Sidebar() {
               active ? 'nav-active' : 'nav-inactive'
             }`}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="nav-icon shrink-0" aria-hidden />
             <span className="truncate">{label}</span>
           </Link>
         );
@@ -94,7 +94,7 @@ export default function Sidebar() {
         }}
         className="nav-inactive hidden w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] lg:flex"
       >
-        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        {theme === 'dark' ? <Sun className="nav-icon" aria-hidden /> : <Moon className="nav-icon" aria-hidden />}
         {theme === 'dark' ? 'Light mode' : 'Dark mode'}
       </button>
 
@@ -111,7 +111,7 @@ export default function Sidebar() {
         }}
         className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] text-red-400 transition hover:bg-red-500/10"
       >
-        <LogOut className="h-4 w-4" />
+        <LogOut className="nav-icon" aria-hidden />
         Sign out
       </button>
     </div>
@@ -119,7 +119,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <header className="mobile-topbar lg:hidden">
+      <header className="nav-mobile-only mobile-topbar">
         <button
           type="button"
           onClick={openMobile}
@@ -127,7 +127,7 @@ export default function Sidebar() {
           aria-label="Open menu"
           aria-expanded={mobileOpen}
         >
-          <Menu className="h-5 w-5 pointer-events-none" />
+          <Menu className="nav-icon pointer-events-none" aria-hidden />
         </button>
 
         <p className="min-w-0 flex-1 truncate px-1 text-center text-sm font-semibold text-[var(--nav-fg)]">
@@ -136,42 +136,36 @@ export default function Sidebar() {
 
         <button
           type="button"
-          onClick={() => {
-            toggleTheme();
-            // toast.info(theme === 'dark' ? 'Light mode ☀️' : 'Dark mode 🌙');
-          }}
+          onClick={() => toggleTheme()}
           className="mobile-topbar-btn"
           aria-label="Toggle theme"
         >
           {theme === 'dark' ? (
-            <Sun className="h-5 w-5 pointer-events-none" />
+            <Sun className="nav-icon pointer-events-none" aria-hidden />
           ) : (
-            <Moon className="h-5 w-5 pointer-events-none" />
+            <Moon className="nav-icon pointer-events-none" aria-hidden />
           )}
         </button>
       </header>
 
-      <aside className="sidebar-panel hidden w-56 shrink-0 flex-col p-4 lg:flex">
-        <div className="sidebar-logo mb-4 border-b border-[var(--nav-border)] pb-4">
-          <Logo variant="sidebar" size="sm" framed={false} priority/>
+      <aside className="nav-desktop-only sidebar-panel sidebar-panel-desktop">
+        <div className="sidebar-logo shrink-0 border-b border-[var(--nav-border)] pb-4">
+          <Logo variant="sidebar" size="sm" framed={false} priority />
         </div>
         {navLinks}
         {navFooter}
       </aside>
 
       {mobileOpen && (
-        <div className="mobile-drawer lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+        <div className="nav-mobile-only mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <button
             type="button"
             className="mobile-drawer-backdrop"
             onClick={closeMobile}
             aria-label="Close menu overlay"
           />
-          <aside
-            className="mobile-drawer-panel sidebar-panel flex justify-center itemcenter w-64 shrink-0 flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mobile-drawer-header mb-4 flex items-center justify-between border-b border-[var(--nav-border)] pb-4">
+          <aside className="mobile-drawer-panel sidebar-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="mobile-drawer-header">
               <Logo variant="sidebar" size="xs" framed={false} />
               <button
                 type="button"
@@ -179,11 +173,11 @@ export default function Sidebar() {
                 className="mobile-topbar-btn mobile-drawer-close"
                 aria-label="Close menu"
               >
-                <X className="h-3 w-3 pointer-events-none" />
+                <X className="nav-icon pointer-events-none" aria-hidden />
               </button>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-4 pt-2">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-4">
               {navLinks}
               {navFooter}
             </div>

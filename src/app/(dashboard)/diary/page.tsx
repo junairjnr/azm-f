@@ -69,14 +69,14 @@ export default function DiaryPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold gold-text">Diary</h1>
+          <h1 className="text-2xl font-bold gold-text sm:text-3xl">Diary</h1>
           <p className="mt-1 text-[var(--muted)]">Write your thoughts and reflect on your day</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="btn-gold flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm"
+          className="btn-gold flex w-full shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           New Entry

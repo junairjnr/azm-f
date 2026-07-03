@@ -38,7 +38,7 @@ export default function HabitCheckbox({ habit, onToggle, loading }: HabitCheckbo
       </div>
 
       <div className="relative z-[2] min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <p
             className={`font-semibold ${
               habit.completed

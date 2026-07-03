@@ -166,7 +166,7 @@ export default function DashboardPage() {
       {error && <ErrorBanner message={error} onRetry={fetchData} />}
 
       <div>
-        <h1 className="text-3xl font-bold gold-text">Today&apos;s Tasks</h1>
+        <h1 className="text-2xl font-bold gold-text sm:text-3xl">Today&apos;s Tasks</h1>
         <p className="mt-1 text-[var(--muted)]">
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           {' · '}{totalCount} tasks
@@ -183,10 +183,10 @@ export default function DashboardPage() {
       )}
 
       {categories.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button
             onClick={() => setFilterCategory('')}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
               !filterCategory ? 'btn-gold' : 'gold-gradient-soft text-[var(--muted)] border border-[var(--card-border)]'
             }`}
           >
@@ -201,7 +201,7 @@ export default function DashboardPage() {
               <button
                 key={cat._id}
                 onClick={() => setFilterCategory(cat._id)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
                   filterCategory === cat._id
                     ? 'btn-gold'
                     : 'gold-gradient-soft text-[var(--muted)] border border-[var(--card-border)]'

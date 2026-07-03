@@ -89,47 +89,49 @@ export default function HabitTimer({ habit, onStart, onStop, loading }: HabitTim
       padding="md"
       className={habit.completed ? 'ring-1 ring-emerald-400/40' : ''}
     >
-      <CardContent className="flex items-center gap-4">
-        <div
-          className="card-clay flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-xl"
-          style={{ backgroundColor: `${habit.color}15` }}
-        >
-          {habit.icon}
-        </div>
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center sm:gap-4">
+          <div
+            className="card-clay flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl sm:h-12 sm:w-12"
+            style={{ backgroundColor: `${habit.color}15` }}
+          >
+            {habit.icon}
+          </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className={`font-semibold ${habit.completed ? 'text-emerald-500 line-through' : 'text-[var(--foreground)]'}`}>
-              {habit.title}
-            </p>
-            {categoryName && (
-              <span className="rounded-full bg-[var(--gold)]/10 px-2 py-0.5 text-[10px] text-[var(--gold)]">
-                {categoryName}
-              </span>
-            )}
-          </div>
-          <div className="mt-1 flex items-center gap-3 text-xs text-[var(--muted)]">
-            <span className="font-mono text-lg text-[var(--gold)]">
-              {formatTimerDisplay(elapsed)}
-            </span>
-            {targetSeconds > 0 && (
-              <span>/ {habit.targetDurationMinutes} min goal</span>
-            )}
-            {habit.durationSeconds ? (
-              <span>Logged: {formatDuration(habit.durationSeconds)}</span>
-            ) : null}
-          </div>
-          {targetSeconds > 0 && (
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]">
-              <div
-                className="gold-gradient h-full rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <p className={`font-semibold ${habit.completed ? 'text-emerald-500 line-through' : 'text-[var(--foreground)]'}`}>
+                {habit.title}
+              </p>
+              {categoryName && (
+                <span className="rounded-full bg-[var(--gold)]/10 px-2 py-0.5 text-[10px] text-[var(--gold)]">
+                  {categoryName}
+                </span>
+              )}
             </div>
-          )}
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
+              <span className="font-mono text-base text-[var(--gold)] sm:text-lg">
+                {formatTimerDisplay(elapsed)}
+              </span>
+              {targetSeconds > 0 && (
+                <span>/ {habit.targetDurationMinutes} min goal</span>
+              )}
+              {habit.durationSeconds ? (
+                <span>Logged: {formatDuration(habit.durationSeconds)}</span>
+              ) : null}
+            </div>
+            {targetSeconds > 0 && (
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]">
+                <div
+                  className="gold-gradient h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 gap-2 self-end sm:self-center">
           {!running ? (
             <button
               onClick={handleStart}

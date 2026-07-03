@@ -42,7 +42,7 @@ export default function SummaryPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold gold-text">Summary & Analytics</h1>
+        <h1 className="text-2xl font-bold gold-text sm:text-3xl">Summary & Analytics</h1>
         <p className="mt-1 text-[var(--muted)]">Track your progress over time</p>
       </div>
 
