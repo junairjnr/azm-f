@@ -69,7 +69,7 @@ export default function Logo({
 
   if (!framed) {
     return (
-      <div className={`mx-auto flex w-full justify-center  h-auto max-w-full object-contain rounded-2xl shadow-2xl ${animate ? 'logo-intro' : ''} ${className}`}>
+      <div className={`mx-auto flex w-full justify-center  ${animate ? 'logo-intro' : ''} ${className}`}>
         {image}
       </div>
     );
