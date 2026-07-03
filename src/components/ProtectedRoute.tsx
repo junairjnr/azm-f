@@ -5,14 +5,18 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { SplashScreen } from '@/components/ui/Skeleton';
 
-export default function HomePage() {
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) return;
-    router.replace(token ? '/dashboard' : '/login');
+    if (!loading && !token) {
+      router.replace('/login');
+    }
   }, [token, loading, router]);
 
-  return <SplashScreen />;
+  if (loading) return <SplashScreen />;
+  if (!token) return null;
+
+  return <>{children}</>;
 }
