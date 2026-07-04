@@ -59,7 +59,7 @@ export default function NotificationManager() {
           tag: `reminder-${habit._id}-${today}-${currentTime}`,
           toastMessage: `Reminder: ${habit.title}`,
           toastType: 'info',
-          sound: 'reminder',
+          sound: 'alarm',
         });
       }
 
@@ -73,7 +73,7 @@ export default function NotificationManager() {
             tag: `timer-goal-${habit._id}-${today}`,
             toastMessage: `${habit.title}: ${habit.targetDurationMinutes} min goal reached!`,
             toastType: 'success',
-            sound: 'success',
+            sound: 'alarm',
           });
         }
       }

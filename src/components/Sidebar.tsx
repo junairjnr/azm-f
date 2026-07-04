@@ -64,7 +64,7 @@ export default function Sidebar() {
   }, [pathname]);
 
   const navLinks = (
-    <nav className="flex-1 space-y-0.5 overflow-y-auto overscroll-contain">
+    <nav className="mt-4 flex-1 space-y-0.5 overflow-y-auto overscroll-contain">
       {navItems.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (

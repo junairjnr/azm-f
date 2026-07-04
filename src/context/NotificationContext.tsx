@@ -36,7 +36,7 @@ export interface NotifyOptions {
   toastMessage?: string;
   toastType?: ToastType;
   skipIfNotified?: boolean;
-  sound?: 'reminder' | 'success' | 'none';
+  sound?: 'reminder' | 'success' | 'alarm' | 'none';
 }
 
 interface NotificationContextValue {

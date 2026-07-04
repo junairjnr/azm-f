@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Check, Play, Square } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import HabitCompleteToggle from '@/components/HabitCompleteToggle';
 import Tooltip from '@/components/ui/Tooltip';
@@ -31,6 +31,7 @@ export default function HabitTimer({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
   const goalNotifiedRef = useRef(false);
+  const autoCompletedRef = useRef(false);
 
   const targetSeconds = (habit.targetDurationMinutes || 0) * 60;
   const progress = targetSeconds > 0 ? Math.min((elapsed / targetSeconds) * 100, 100) : 0;
@@ -77,22 +78,44 @@ export default function HabitTimer({
 
   useEffect(() => {
     goalNotifiedRef.current = false;
+    autoCompletedRef.current = false;
   }, [habit._id, habit.isTimerRunning]);
 
   useEffect(() => {
-    if (!running || targetSeconds <= 0 || goalNotifiedRef.current) return;
+    if (!running || targetSeconds <= 0 || autoCompletedRef.current) return;
     if (elapsed < targetSeconds) return;
+    if (habit.completed) return;
 
-    goalNotifiedRef.current = true;
-    const today = formatDate();
-    void notify({
-      title: `🎯 Goal reached — ${habit.title}`,
-      body: `You hit your ${habit.targetDurationMinutes} min target for ${habit.title}.`,
-      tag: `timer-goal-${habit._id}-${today}`,
-      toastMessage: `${habit.title}: ${habit.targetDurationMinutes} min goal reached!`,
-      toastType: 'success',
-    });
-  }, [elapsed, running, targetSeconds, habit._id, habit.title, habit.targetDurationMinutes, notify]);
+    autoCompletedRef.current = true;
+
+    if (!goalNotifiedRef.current) {
+      goalNotifiedRef.current = true;
+      const today = formatDate();
+      void notify({
+        title: `🎯 Goal reached — ${habit.title}`,
+        body: `You hit your ${habit.targetDurationMinutes} min target for ${habit.title}. Task completed automatically.`,
+        tag: `timer-goal-${habit._id}-${today}`,
+        toastMessage: `${habit.title}: ${habit.targetDurationMinutes} min goal reached — completed!`,
+        toastType: 'success',
+        sound: 'alarm',
+      });
+    }
+
+    clearTimerInterval();
+    setRunning(false);
+    startTimeRef.current = 0;
+    void onToggle(habit._id, elapsed);
+  }, [
+    elapsed,
+    running,
+    targetSeconds,
+    habit._id,
+    habit.title,
+    habit.targetDurationMinutes,
+    habit.completed,
+    notify,
+    onToggle,
+  ]);
 
   const handleStart = async () => {
     await onStart(habit._id);
@@ -172,26 +195,36 @@ export default function HabitTimer({
           </div>
         </div>
 
-        <div className="flex shrink-0 gap-2 self-end sm:self-center">
+        <div className="flex shrink-0 items-center gap-2 self-end sm:self-center">
           {!running ? (
-            <button
-              onClick={handleStart}
-              disabled={loading || habit.completed}
-              className="card-neo flex h-11 w-11 items-center justify-center rounded-xl text-[var(--gold-dark)] transition hover:scale-105 disabled:opacity-40"
-              aria-label="Start timer"
-            >
-              <Play className="h-5 w-5 fill-current" />
-            </button>
+            <Tooltip label={habit.completed ? 'Already completed' : 'Start timer'} side="top">
+              <button
+                onClick={handleStart}
+                disabled={loading || habit.completed}
+                className="card-neo flex h-11 w-11 items-center justify-center rounded-xl text-[var(--gold-dark)] transition hover:scale-105 disabled:opacity-40"
+                aria-label="Start timer"
+              >
+                <Play className="h-5 w-5 fill-current" />
+              </button>
+            </Tooltip>
           ) : (
-            <button
-              onClick={handleStop}
-              disabled={loading}
-              className="card-clay flex h-11 w-11 items-center justify-center rounded-xl text-red-500 transition hover:scale-105"
-              aria-label="Stop timer"
-            >
-              <Square className="h-4 w-4 fill-current" />
-            </button>
+            <Tooltip label="Stop & log time" side="top">
+              <button
+                onClick={handleStop}
+                disabled={loading}
+                className="card-clay flex h-11 w-11 items-center justify-center rounded-xl text-red-500 transition hover:scale-105"
+                aria-label="Stop timer"
+              >
+                <Square className="h-4 w-4 fill-current" />
+              </button>
+            </Tooltip>
           )}
+
+          <HabitCompleteToggle
+            completed={!!habit.completed}
+            onToggle={handleToggleComplete}
+            disabled={loading}
+          />
         </div>
       </CardContent>
     </Card>
