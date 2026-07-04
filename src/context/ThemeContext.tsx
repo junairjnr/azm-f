@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { SplashScreen } from '@/components/ui/Skeleton';
 
 type Theme = 'light' | 'dark';
 
@@ -51,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   if (!mounted) {
-    return <div className="app-bg min-h-screen bg-white" />;
+    return <SplashScreen />;
   }
 
   return (

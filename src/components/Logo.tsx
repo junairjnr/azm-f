@@ -13,16 +13,16 @@ interface LogoProps {
 
 const assets: Record<LogoVariant, { src: string; alt: string; width: number; height: number }> = {
   sidebar: {
-    src: '/branding/azm-sidebar.png',
-    alt: 'AZM عزم',
-    width: 773,
-    height: 773,
+    src: '/icons/icon512_rounded.png',
+    alt: 'AZM',
+    width: 512,
+    height: 512,
   },
   full: {
-    src: '/branding/azm-full.png',
+    src: '/icons/icon512_rounded.png',
     alt: 'AZM — Determination. Resolve. Grow.',
-    width: 1024,
-    height: 1024,
+    width: 512,
+    height: 512,
   },
 };
 
@@ -63,7 +63,7 @@ export default function Logo({
       quality={75}
       priority={priority}
       unoptimized
-      className={`block h-auto max-w-full object-contain rounded-2xl shadow-2xl ${sizeClass} ${className}`}
+      className={`block h-auto max-w-full object-contain ${framed ? 'rounded-2xl shadow-2xl' : ''} ${sizeClass} ${className}`}
     />
   );
 

@@ -521,11 +521,14 @@ html {
 
 .splash-screen {
   min-height: 100vh;
-  background: #faf8f3;
+  min-height: 100dvh;
+  background: #ffffff;
+  color: #065f46;
 }
 
 .dark .splash-screen {
-  background: #022c22;
+  background: linear-gradient(180deg, #011a14 0%, #022c22 40%, #065f46 100%);
+  color: #ecfdf5;
 }
 
 .dark .logo-card,
@@ -698,6 +701,112 @@ html {
 /* Emerald accent gradients */
 .gold-gradient {
   background: linear-gradient(135deg, #047857 0%, #059669 35%, #10b981 65%, #6ee7b7 100%);
+}
+
+/* Task complete checkbox — high contrast on light & dark cards */
+.habit-complete-toggle {
+  display: inline-flex;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2.5px solid #059669;
+  background: #ffffff;
+  color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(5, 150, 105, 0.15);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.habit-complete-toggle-inner {
+  display: block;
+  height: 0.65rem;
+  width: 0.65rem;
+  border-radius: 9999px;
+  background: rgba(5, 150, 105, 0.2);
+}
+
+.habit-complete-toggle.is-checked {
+  border-color: #047857;
+  background: linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+}
+
+.habit-complete-toggle:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.habit-complete-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dark .habit-complete-toggle {
+  border-color: #34d399;
+  background: rgba(2, 44, 34, 0.85);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.25);
+}
+
+.dark .habit-complete-toggle-inner {
+  background: rgba(52, 211, 153, 0.35);
+}
+
+.dark .habit-complete-toggle.is-checked {
+  border-color: #6ee7b7;
+  background: linear-gradient(135deg, #047857 0%, #059669 45%, #34d399 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* Hover tooltip */
+.ui-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.ui-tooltip-bubble {
+  position: absolute;
+  left: 50%;
+  z-index: 60;
+  transform: translateX(-50%) translateY(4px);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(5, 150, 105, 0.25);
+  background: #064e3b;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #ecfdf5;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  box-shadow: 0 8px 20px rgba(2, 44, 34, 0.35);
+}
+
+.ui-tooltip-top .ui-tooltip-bubble {
+  bottom: calc(100% + 0.45rem);
+  transform: translateX(-50%) translateY(4px);
+}
+
+.ui-tooltip-bottom .ui-tooltip-bubble {
+  top: calc(100% + 0.45rem);
+  transform: translateX(-50%) translateY(-4px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ui-tooltip:hover .ui-tooltip-bubble,
+  .ui-tooltip:focus-within .ui-tooltip-bubble {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .gold-text {

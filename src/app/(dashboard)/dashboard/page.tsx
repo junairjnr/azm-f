@@ -80,13 +80,23 @@ export default function DashboardPage() {
     return Object.entries(groups).filter(([, g]) => g.habits.length > 0);
   }, [filteredHabits, categories]);
 
-  const handleToggle = async (id: string) => {
+  const handleToggle = async (id: string, durationSeconds?: number) => {
     if (!token) return;
     setTogglingId(id);
     try {
-      const result = await api.toggleHabit(token, id, today);
+      const result = await api.toggleHabit(token, id, today, durationSeconds);
       setHabits((prev) =>
-        prev.map((h) => (h._id === id ? { ...h, completed: result.completed } : h))
+        prev.map((h) =>
+          h._id === id
+            ? {
+                ...h,
+                completed: result.completed,
+                durationSeconds: result.durationSeconds,
+                isTimerRunning: false,
+                timerStartedAt: null,
+              }
+            : h
+        )
       );
       const summaryData = await api.getSummary(token);
       setSummary(summaryData);
@@ -250,6 +260,7 @@ export default function DashboardPage() {
                         habit={habit}
                         onStart={handleStartTimer}
                         onStop={handleStopTimer}
+                        onToggle={handleToggle}
                         loading={togglingId === habit._id}
                       />
                     ) : (

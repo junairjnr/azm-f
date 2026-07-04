@@ -1,13 +1,15 @@
 {
   "name": "AZM — Determination. Resolve. Grow.",
   "short_name": "AZM",
-  "description": "Build habits with determination, resolve, and growth. Track tasks, streaks, diary & expenses.",
+  "description": "Build habits with determination, resolve, and growth. Track tasks, streaks, diary and expenses.",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#065f46",
-  "theme_color": "#065f46",
-  "orientation": "portrait-primary",
   "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "dir": "auto",
+  "lang": "en-IN",
+  "theme_color": "#065f46",
+  "background_color": "#ffffff",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -16,13 +18,13 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icons/icon512_rounded.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icons/icon512_maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

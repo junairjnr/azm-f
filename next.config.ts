@@ -11,6 +11,7 @@ const withPWA = withPWAInit({
   sw: 'sw.js',
   workboxOptions: {
     disableDevLogs: true,
+    importScripts: ['/notification-sw.js'],
   },
 });
 

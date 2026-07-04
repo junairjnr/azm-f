@@ -1,14 +1,19 @@
+import type { Habit } from '@/types';
+
 const SETTINGS_KEY = 'azm_notification_settings';
 const NOTIFIED_PREFIX = 'azm_notified_';
+const HABITS_CACHE_KEY = 'azm_habits_offline_cache';
 
 export interface NotificationSettings {
   diaryReminderEnabled: boolean;
   diaryReminderTime: string;
+  soundEnabled: boolean;
 }
 
 const DEFAULT_SETTINGS: NotificationSettings = {
   diaryReminderEnabled: true,
   diaryReminderTime: '21:00',
+  soundEnabled: true,
 };
 
 export function getNotificationSettings(): NotificationSettings {
@@ -20,6 +25,7 @@ export function getNotificationSettings(): NotificationSettings {
     return {
       diaryReminderEnabled: parsed.diaryReminderEnabled ?? DEFAULT_SETTINGS.diaryReminderEnabled,
       diaryReminderTime: parsed.diaryReminderTime ?? DEFAULT_SETTINGS.diaryReminderTime,
+      soundEnabled: parsed.soundEnabled ?? DEFAULT_SETTINGS.soundEnabled,
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -43,6 +49,31 @@ export function getCurrentTimeHHMM(date = new Date()): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
+export function cacheHabitsForOffline(date: string, habits: Habit[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(
+    HABITS_CACHE_KEY,
+    JSON.stringify({ date, habits, savedAt: Date.now() })
+  );
+}
+
+export function getCachedHabits(date: string): Habit[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(HABITS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { date: string; habits: Habit[] };
+    return parsed.date === date ? parsed.habits : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isOnline(): boolean {
+  if (typeof navigator === 'undefined') return true;
+  return navigator.onLine;
+}
+
 export async function requestNotificationPermission(): Promise<NotificationPermission | 'unsupported'> {
   if (!('Notification' in window)) return 'unsupported';
   if (Notification.permission === 'granted') return 'granted';
@@ -59,10 +90,12 @@ export async function sendBrowserNotification(
 
   const options = {
     body,
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-192x192.png',
+    icon: '/icons/icon512_rounded.png',
+    badge: '/icons/icon512_rounded.png',
     tag,
-    data: { url: '/' },
+    silent: false,
+    requireInteraction: false,
+    data: { url: '/dashboard' },
   } satisfies NotificationOptions;
 
   try {
@@ -72,7 +105,7 @@ export async function sendBrowserNotification(
       return true;
     }
   } catch {
-    // fall through to Notification API
+    // fall through
   }
 
   try {

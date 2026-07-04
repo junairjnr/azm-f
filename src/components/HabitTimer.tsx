@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Play, Square } from 'lucide-react';
+import { Check, Play, Square } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
+import HabitCompleteToggle from '@/components/HabitCompleteToggle';
+import Tooltip from '@/components/ui/Tooltip';
 import { useNotifications } from '@/context/NotificationContext';
 import { formatDate } from '@/lib/auth';
 import type { Habit } from '@/types';
@@ -12,10 +14,17 @@ interface HabitTimerProps {
   habit: Habit;
   onStart: (id: string) => Promise<void>;
   onStop: (id: string, elapsed: number) => Promise<void>;
+  onToggle: (id: string, durationSeconds?: number) => Promise<void>;
   loading?: boolean;
 }
 
-export default function HabitTimer({ habit, onStart, onStop, loading }: HabitTimerProps) {
+export default function HabitTimer({
+  habit,
+  onStart,
+  onStop,
+  onToggle,
+  loading,
+}: HabitTimerProps) {
   const { notify } = useNotifications();
   const [elapsed, setElapsed] = useState(habit.durationSeconds || 0);
   const [running, setRunning] = useState(!!habit.isTimerRunning);
@@ -26,6 +35,26 @@ export default function HabitTimer({ habit, onStart, onStop, loading }: HabitTim
   const targetSeconds = (habit.targetDurationMinutes || 0) * 60;
   const progress = targetSeconds > 0 ? Math.min((elapsed / targetSeconds) * 100, 100) : 0;
 
+  const clearTimerInterval = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  const getSessionElapsed = () =>
+    startTimeRef.current
+      ? Math.floor((Date.now() - startTimeRef.current) / 1000)
+      : 0;
+
+  const getTotalElapsed = () => {
+    const base = habit.durationSeconds || 0;
+    if (running && habit.isTimerRunning) {
+      return base + getSessionElapsed();
+    }
+    return elapsed;
+  };
+
   useEffect(() => {
     if (habit.isTimerRunning && habit.timerStartedAt) {
       const base = habit.durationSeconds || 0;
@@ -33,13 +62,17 @@ export default function HabitTimer({ habit, onStart, onStop, loading }: HabitTim
       setElapsed(base + sinceStart);
       setRunning(true);
       startTimeRef.current = Date.now();
+      clearTimerInterval();
       intervalRef.current = setInterval(() => {
         setElapsed(base + sinceStart + Math.floor((Date.now() - startTimeRef.current) / 1000));
       }, 1000);
+    } else if (!habit.isTimerRunning) {
+      clearTimerInterval();
+      setRunning(false);
+      setElapsed(habit.durationSeconds || 0);
+      startTimeRef.current = 0;
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return clearTimerInterval;
   }, [habit.isTimerRunning, habit.timerStartedAt, habit.durationSeconds]);
 
   useEffect(() => {
@@ -65,18 +98,26 @@ export default function HabitTimer({ habit, onStart, onStop, loading }: HabitTim
     await onStart(habit._id);
     setRunning(true);
     startTimeRef.current = Date.now();
+    clearTimerInterval();
     intervalRef.current = setInterval(() => {
       setElapsed((prev) => prev + 1);
     }, 1000);
   };
 
   const handleStop = async () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    clearTimerInterval();
     setRunning(false);
-    const sessionElapsed = startTimeRef.current
-      ? Math.floor((Date.now() - startTimeRef.current) / 1000)
-      : 0;
+    const sessionElapsed = getSessionElapsed();
     await onStop(habit._id, sessionElapsed);
+    startTimeRef.current = 0;
+  };
+
+  const handleToggleComplete = async () => {
+    clearTimerInterval();
+    setRunning(false);
+    const totalSeconds = getTotalElapsed();
+    await onToggle(habit._id, running ? totalSeconds : undefined);
+    startTimeRef.current = 0;
   };
 
   const categoryName =

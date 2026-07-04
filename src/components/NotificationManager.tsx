@@ -5,7 +5,12 @@ import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/auth';
-import { getCurrentTimeHHMM } from '@/lib/notifications';
+import {
+  cacheHabitsForOffline,
+  getCachedHabits,
+  getCurrentTimeHHMM,
+  isOnline,
+} from '@/lib/notifications';
 import type { Habit } from '@/types';
 
 const POLL_MS = 15000;
@@ -30,13 +35,20 @@ export default function NotificationManager() {
     const now = new Date();
     const today = formatDate(now);
     const currentTime = getCurrentTimeHHMM(now);
+    const online = isOnline();
 
     let habits = habitsRef.current;
-    try {
-      habits = await api.getHabits(token, today);
-      habitsRef.current = habits;
-    } catch {
-      habits = habitsRef.current;
+
+    if (online) {
+      try {
+        habits = await api.getHabits(token, today);
+        habitsRef.current = habits;
+        cacheHabitsForOffline(today, habits);
+      } catch {
+        habits = getCachedHabits(today) ?? habitsRef.current;
+      }
+    } else {
+      habits = getCachedHabits(today) ?? habitsRef.current;
     }
 
     for (const habit of habits) {
@@ -47,6 +59,7 @@ export default function NotificationManager() {
           tag: `reminder-${habit._id}-${today}-${currentTime}`,
           toastMessage: `Reminder: ${habit.title}`,
           toastType: 'info',
+          sound: 'reminder',
         });
       }
 
@@ -60,20 +73,25 @@ export default function NotificationManager() {
             tag: `timer-goal-${habit._id}-${today}`,
             toastMessage: `${habit.title}: ${habit.targetDurationMinutes} min goal reached!`,
             toastType: 'success',
+            sound: 'success',
           });
         }
       }
     }
 
     if (settings.diaryReminderEnabled && settings.diaryReminderTime === currentTime) {
-      if (diaryCheckedDateRef.current !== today) {
-        try {
-          const entries = await api.getDiaryEntries(token, { date: today });
-          hasDiaryTodayRef.current = entries.length > 0;
-          diaryCheckedDateRef.current = today;
-        } catch {
-          hasDiaryTodayRef.current = null;
+      if (online) {
+        if (diaryCheckedDateRef.current !== today) {
+          try {
+            const entries = await api.getDiaryEntries(token, { date: today });
+            hasDiaryTodayRef.current = entries.length > 0;
+            diaryCheckedDateRef.current = today;
+          } catch {
+            hasDiaryTodayRef.current = null;
+          }
         }
+      } else if (hasDiaryTodayRef.current === null) {
+        hasDiaryTodayRef.current = false;
       }
 
       if (hasDiaryTodayRef.current === false) {
@@ -83,6 +101,7 @@ export default function NotificationManager() {
           tag: `diary-reminder-${today}-${currentTime}`,
           toastMessage: 'Time to write in your diary today.',
           toastType: 'info',
+          sound: 'reminder',
         });
       }
     }
@@ -93,7 +112,20 @@ export default function NotificationManager() {
 
     checkAll();
     const interval = setInterval(checkAll, POLL_MS);
-    return () => clearInterval(interval);
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void checkAll();
+    };
+    const onOnline = () => void checkAll();
+
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', onOnline);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', onOnline);
+    };
   }, [token, checkAll]);
 
   return null;

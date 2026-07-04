@@ -2,9 +2,9 @@ import Logo from '@/components/Logo';
 
 export function SplashScreen() {
   return (
-    <div className="splash-screen flex min-h-screen flex-col items-center justify-center px-6">
-      <Logo variant="full" size="xl" animate priority />
-      <p className="mt-10 text-sm text-[var(--muted)]">Loading your dashboard...</p>
+    <div className="splash-screen flex min-h-[100dvh] flex-col items-center justify-center px-6">
+      <Logo variant="full" size="xl" framed={false} animate priority />
+      <p className="mt-10 text-sm text-[var(--muted)] dark:text-emerald-100/90">Loading your dashboard...</p>
       <div className="mt-8 flex gap-2">
         {[0, 1, 2].map((i) => (
           <div
